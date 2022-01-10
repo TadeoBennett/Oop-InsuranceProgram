@@ -1,0 +1,42 @@
+1.0 The user must be able to add an insurance policy to either an exising or new customer.
+	1.1. After Selecting the "Add an Insurance Policy" option, the user chooses to either add it to a new or existing customer.
+		1.1.1 If the user chooses to add a policy to a new customer, a menu is shown to let the user choose between "HomeInsurance" or "CarInsurance";
+			1.1.1.1 For any that is chosen, the valid questions are asked to receive the information.
+			1.1.1.2 Create the insurance policy for that customer.
+			1.1.1.3 The option to exit is shown
+
+		1.1.2 If the user chooses to add a policy to an existing customer, then the new policy created should use information from the existing insurance policy.
+			1.1.2.1 Some information is grabbed from the existing policy to initialize some parameters for the policy being added.
+			1.1.2.2 The valid questions are asked to receive the information for the policy added.
+			1.1.2.3 Create insurance policy for that customer.
+			1.1.2.4 The option to exit is shown
+
+2.0 The user must be able to view the policies of any specific customer
+	2.1 The user is presented with a list of all customers 
+	2.2 The user selects a customer and is the presented with the options of which policy to view.
+	2.3 After selecting the policy to view, the policy's details are shown and the option to exit is shown.
+
+
+3.0 The user must be able to update any policy monthly via the "Renew Policy" option.
+	3.1 After selecting the "Renew Policy" option, the user is presented with the list of customer.
+	3.2 After a customer is chosen, the user inputs the amount paid by the customer as agreed upon in step 1.1.1.1
+	3.3 The amount paid is divided by the monthly payment to find out if the customer has paid in advance for future months. 
+	3.4 The months passed is incremented by the amountpaid/monthly payment.
+	3.5 If the user has overpaid. Print to the screen that he/she has overpaid and a refund needs to be given.
+	3.6 After the refund statement has been shown, or the customer has paid for the necessary number of months...the user must be asked if he/she wants to renew their policy to which all payment variables will be reset and given new values. Those variables in questions are listed below:	
+		float HomeInsurance_monthlyPayment = 0; //amount needed to be paid for the month
+		float amount_paid = 0; //amount
+		int months_passed = 0; //track the number of payments needed
+		int HomeInsurance_expiryDateLimit = 0; //number of months until the policy expires
+		float homeowner_payment = 0; //amount paid for the month currently
+	3.7 The user cannot renew their policy until the full amount is paid.
+
+4.0 The user must be able to exit the program.
+
+
+Other Information
+
+
+
+
+
