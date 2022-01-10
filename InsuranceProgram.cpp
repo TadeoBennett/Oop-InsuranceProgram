@@ -1,5 +1,4 @@
 //InsuranceProgram
-//C:\Users\Lenovo\Documents\Technology\C++ ProjectsPractice\LearnAtUB\projects
 #include <iostream>
 #include <vector>
 #include <map>
