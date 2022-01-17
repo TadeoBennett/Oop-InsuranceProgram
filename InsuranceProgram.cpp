@@ -16,7 +16,7 @@ public: //variables with personal details
 	string last_name = "unknown"; //last word in the person's fullname
 	string phone_number = "unknown";
 	string socialsecurity_number = "unknown";
-	bool exists_carInsurance= false;
+	bool exists_carInsurance= false; //will be changed when their correspinding object is made.
 	bool exists_HomeInsurance = false;
 
 public: //constructors
@@ -48,8 +48,8 @@ private: //variables with details about the car
 	int car_year = 0;
 	int car_annualmiles = 0;
 	float CarInsurance_monthlyPayment = 0;
-	float amount_paid = 0; //amount
-	int months_passed = 0; //track the number of payments needed
+	float amount_paid = 0; //amount paid when renewing policy(not used)
+	int months_passed = 0; //track the number of payments paid for, and thus, amount needed
 	int CarInsurance_expiryDateLimit = 7;
 	float carowner_payment = 0;
 	vector<string> car_safetyfeatures;
@@ -76,7 +76,7 @@ public: //constructors
 	}
 
 	virtual void cast(){} //helps with dynamic cast
-public: //methods(getters)
+public: //methods(getters and setters)
 	string get_car_make(){return car_make;}
 	string get_car_model(){return car_model;}
 	int get_car_driver_licensenumber(){return car_driver_licensenumber;}
@@ -91,6 +91,15 @@ public: //methods(getters)
 	vector<string> get_car_safetyfeatures(){return car_safetyfeatures;}
 	vector<string> get_car_antitheftdevices(){return car_antitheftdevices;}
 	map<int, string> get_driver_courses(){return driver_courses;}
+
+	//setters
+	void renew_CarInsurancePolicy(int monthsp){
+		// updates the months passed
+		months_passed += monthsp;
+	}
+	void reset_CarInsurancePolicy(){
+		months_passed = 0;
+	}
 };
 // -----------------------------------------------------------------------------HomeInsurance class
 class HomeInsurance: public Insurance{
@@ -125,7 +134,7 @@ public: //constructors
 
 	virtual void cast(){} //helps with dynamic cast
 
-public: //methods(getters)
+public: //methods(getters and setters)
 	string get_homeowner_address(){return homeowner_address;}
 	string get_homeowner_maritalstatus(){return homeowner_maritalstatus;}
 	string get_homeowner_homeImprovements(){return homeowner_homeImprovements;}
@@ -137,6 +146,15 @@ public: //methods(getters)
 	int get_HomeInsurance_expiryDateLimit(){return HomeInsurance_expiryDateLimit;}
 	float get_homeowner_payment(){return homeowner_payment;}
 	vector<string> get_people_at_home(){return people_at_home;}
+
+	//setters
+	void renew_HomeInsurancePolicy(int monthsp){
+		// updates the months passed
+		months_passed += monthsp;
+	}
+	void reset_HomeInsurancePolicy(){
+		months_passed = 0;
+	}
 };
 // -----------------------------------------------------------------------------Customer Node
 struct Customer{
@@ -154,7 +172,7 @@ private: //all temporary nodes and variables
 	//all variables used for each class
 	string carmake, carmodel, fn, mn, ln, pn, ssn, address, marital_status, homeImprovements; 
 	int driver_ln, carVIN, caryear, annualmiles, mp, expiryDateLimit, polNum, a, id;
-	float monthly_payment, ap, cop/*car owner payment*/, hop/*home owner payment*/; 
+	float monthly_payment, ap/*only used when*/, cop/*car owner payment*/, hop/*home owner payment*/; 
 	bool petOwner, entrepreneur, exists; 
 	vector<string> antitheftdevices;
 	vector<string> home_people;
@@ -166,6 +184,7 @@ public://other method declarations
 	void display_Heading();
 	void display_main_Menu();
 	void display_insurancetype_Menu();
+
 	//methods for testing
 	void add_NewCarInsurancePolicy(string carma, string carmo, int d_ln, int carV, int cary, int annualm, float monthlyp, float amountp, int monthsp, int edl ,float carop ,vector<string> safetyf, vector<string> atd, map<int, string> driverc, bool exists, int polnum, string firstn, string middlen, string lastn, string phonen, string social, int cust_age, int cust_id);
 	void add_NewHomeInsurancePolicy(string add, string maritals, string homei, bool peto, bool entr, float monthlyp, float amountp, int monthsp, int edl, float homeop, vector<string>hp, bool exists, int polnum, string firstn, string middlen, string lastn, string phonen, string social, int cust_age, int cust_id);
@@ -187,6 +206,9 @@ public://other method declarations
 	void display_CarInsurancePolicy(int customer_ID);
 	void display_HomeInsurancePolicy(int customer_ID);
 
+	//renewPolicy
+	void renewPolicy(int c_ID, int insuranceOption, Customer* customer);
+
 	//methods that handle the linked list
 	bool isEmpty();
 	void traverseCustomers();
@@ -206,7 +228,10 @@ void LinkedList::traverseCustomers(){
 		while(temp1 != NULL){
 			cout<<count<<".) "<<temp1->policyList[0]->get_first_name()<<" "<<temp1->policyList[0]->get_last_name();
 			cout<<"->ID: "<<temp1->policyList[0]->get_customer_ID()<<" ->PolicyNumber: "<<temp1->policyList[0]->get_policyNum();
-			temp1 = temp1->next;
+			if(temp1->policyList[0]->exists_carInsurance || temp1->policyList[1]->exists_carInsurance){ cout<<" | car |";}
+			if(temp1->policyList[0]->exists_HomeInsurance || temp1->policyList[1]->exists_HomeInsurance){ cout<<" | home |";}
+
+			temp1 = temp1->next; //move to next node(customer) in list
 			cout<<"\n";
 			++count;
 		}
@@ -227,7 +252,9 @@ void LinkedList::display_main_Menu(){
 	cout<<" 1. Add an Insurance Policy\n";
 	cout<<" 2. View Policy Details\n";
 	cout<<" 3. Renew Policy\n";
-	cout<<" 4. Exit\n";
+	cout<<" 4. See Customer List\n";
+	cout<<" 5. Delete all Customers\n";
+	cout<<" 6. Exit\n";
 	cout<<"+--------------choice: ";
 }
 void LinkedList::display_insurancetype_Menu(){
@@ -260,13 +287,10 @@ void LinkedList::add_InsuranceDetails(){
 }
 
 void LinkedList::add_NewCarInsuranceDetails(){
+	//Getting car insurance details
 	cout<<"+-----------------------------+\n";
 	cout<<"+ Adding CarInsurance Details +\n";
 	cout<<"+-----------------------------+\n";
-	cout<<"Car make: "; cin>>carmake;
-	cout<<"Car model: "; cin>>carmodel;
-	cout<<"Driver License Number: "; cin>>driver_ln;
-	cout<<"Car License Plate(VIN) number: "; cin>>carVIN;
 	cout<<"Car year: "; cin>>caryear;
 	cout<<"Car annual miles: "; cin>>annualmiles;
 	cout<<"Agreed Monthly Payment: $"; cin>>monthly_payment;
@@ -339,9 +363,11 @@ void LinkedList::add_NewCarInsuranceDetails(){
 				cout<<"\n";			
 		}
 	}while(choice != 'n');
+	//Done getting car insurance details
 }
 
 void LinkedList::add_NewHomeInsuranceDetails(){
+	//Getting home insurance details
 	cout<<"+------------------------------+\n";
 	cout<<"+ Adding HomeInsurance Details +\n";
 	cout<<"+------------------------------+\n";
@@ -349,6 +375,10 @@ void LinkedList::add_NewHomeInsuranceDetails(){
 	cout<<"Marital Status(Married, Widowed, Single, Divorced, Separated): "; cin>>marital_status; cin.ignore();
 
 	char option;
+	cout<<"Car make: "; cin>>carmake;
+	cout<<"Car model: "; cin>>carmodel;
+	cout<<"Driver License Number: "; cin>>driver_ln;
+	cout<<"Car License Plate(VIN) number: "; cin>>carVIN;
 	cout<<"Home improvements(multiple statements allowed): "; getline(cin, homeImprovements);
 	cout<<"Pet owner(t for true, f for false): "; cin>>option;
 	if(option == 't'){petOwner = true;}
@@ -388,6 +418,7 @@ void LinkedList::add_NewHomeInsuranceDetails(){
 				cout<<"\n";			
 		}
 	}while(choice != 'n');
+	//Done getting car insurance details
 }
 
 void LinkedList::add_NewCarInsurancePolicy(){
@@ -396,7 +427,7 @@ void LinkedList::add_NewCarInsurancePolicy(){
 	exists = true;
 	if(isEmpty()){//if the list is empty
 		//temp = (Node*)malloc(sizeof(Node)); // can also use "new Node();"
-		temp = new Customer(); //create a memory block for this node
+		temp = new Customer(); //create a memory block for this node(customer)
 		temp->policyList.push_back(new CarInsurance(carmake, carmodel, driver_ln, carVIN, caryear, annualmiles, monthly_payment, ap, mp, expiryDateLimit, cop , sf, antitheftdevices, dc, exists, polNum, fn, mn, ln, pn, ssn, a, id));
 		temp->next = NULL;
 		//the node has been prepped 
@@ -407,10 +438,12 @@ void LinkedList::add_NewCarInsurancePolicy(){
 		while(temp1->next != NULL){//loop all nodes in the list 
 			temp1 = temp1->next;
 		}
-		temp = new Customer();
+		temp = new Customer(); //create a memory block for this node(customer)
 		temp->policyList.push_back(new CarInsurance(carmake, carmodel, driver_ln, carVIN, caryear, annualmiles, monthly_payment, ap, mp, expiryDateLimit, cop , sf, antitheftdevices, dc, exists, polNum, fn, mn, ln, pn, ssn, a, id));
 		temp->next = NULL;
-		temp1->next = temp;
+		//the node has been prepped 
+
+		temp1->next = temp; //have the next pointer in the current node, point to the new node(customer)
 	}
 	cout<<"CAR INSURANCE ADDED"<<"\n\n";
 
@@ -419,16 +452,16 @@ void LinkedList::add_NewCarInsurancePolicy(){
 	antitheftdevices.clear(); //clears the anti theft devices array
 	dc.clear();  //clears the driver courses map
 	exists = false;
+	system("pause");
 }
 
 void LinkedList::add_NewHomeInsurancePolicy(){
 	// creating the customer Node and adding the data to the class in the vector array of the customer node
 	// policyList.push_back(new CarInsurance(arg1, arg2, arg3...))
-
 	exists = true;
 	if(isEmpty()){//if the list is empty
 		//temp = (Node*)malloc(sizeof(Node)); // can also use "new Node();"
-		temp = new Customer(); //create a memory block for this node
+		temp = new Customer(); //create a memory block for this node(customer)
 		temp->policyList.push_back(new HomeInsurance(address, marital_status, homeImprovements, petOwner, entrepreneur, monthly_payment, ap, mp, expiryDateLimit, hop, home_people, exists, polNum, fn, mn, ln, pn, ssn, a, id));
 		temp->next = NULL;
 		//the node has been prepped 
@@ -439,39 +472,44 @@ void LinkedList::add_NewHomeInsurancePolicy(){
 		while(temp1->next != NULL){//loop all nodes in the list 
 			temp1 = temp1->next;
 		}
-		temp = new Customer();
+		temp = new Customer(); //create a memory block for this node(customer)
 		temp->policyList.push_back(new HomeInsurance(address, marital_status, homeImprovements, petOwner, entrepreneur, monthly_payment, ap, mp, expiryDateLimit, hop, home_people, exists, polNum, fn, mn, ln, pn, ssn, a, id));
 		temp->next = NULL;
-		temp1->next = temp;
+		//the node is prepped
+
+		temp1->next = temp;//have the next pointer in the current node, point to the new node(customer)
 	}
 	cout<<"HOME INSURANCE ADDED"<<"\n\n";	
 
 	//resetting variables and data structures
 	home_people.clear();
 	exists = false;
+	system("pause");
 }
 
 void LinkedList::add_ToExistingPolicy(int index, int insuranceOption){
 	temp1 = head;
 	int count = 1;
-	for(int i = 1; i<index; i++){ //get to the customer node who wants to add insurance
-		temp1 = temp1->next;
+	for(int i = 1; i<index; i++){ //get to the customer node who wants to add insurance(by looping at and stopping at the index position in the linked list)
+		temp1 = temp1->next; //loop to next customer node
 		++count;
 	}
-	//getting all personal details from the insurance policy that already exists.
+
+	//getting all personal details from the insurance policy that already exists for that customer
 	fn = temp1->policyList[0]->get_first_name();
 	mn = temp1->policyList[0]->get_middle_name();
 	ln = temp1->policyList[0]->get_last_name();
-	polNum = temp1->policyList[0]->get_policyNum();
+	polNum = (rand() % 900000) + 600000; //generates a random number between 600000 and 1,499,999
 	a = temp1->policyList[0]->get_age();
 	id = temp1->policyList[0]->get_customer_ID();
 	pn = temp1->policyList[0]->get_phone_number();
 	ssn = temp1->policyList[0]->get_socialsecurity_number();
 
 	if(insuranceOption == 1){ 
-		//add new insurance details from existing insurance policy;
-		add_NewCarInsuranceDetails(); //get details for car insurance pplicy
+		//added new insurance details from existing insurance policy;
+		add_NewCarInsuranceDetails(); //get details for car insurance policy
 		temp1->policyList.push_back(new CarInsurance(carmake, carmodel, driver_ln, carVIN, caryear, annualmiles, monthly_payment, ap, mp, expiryDateLimit, cop , sf, antitheftdevices, dc, true/*exists*/, polNum, fn, mn, ln, pn, ssn, a, id));
+		system("pause");
 		// CarInsurance* t = dynamic_cast<CarInsurance*>(temp1->policyList[1]);
 		// cout<<"New values at for customer "<<count<<" and his name is "<<temp1->policyList[1]->get_first_name()<<" and car make is "<<t->get_car_make()<<"\n\n";
 
@@ -479,13 +517,15 @@ void LinkedList::add_ToExistingPolicy(int index, int insuranceOption){
 		// CarInsurance* t = dynamic_cast<CarInsurance*>(temp1->policyList[1]);
 		// cout<<"New car name is "<<t->get_car_make()<<"\n\n";
 	}else if(insuranceOption == 2){
-		//add new insurance details from existing insurance policy;
+		//added new insurance details from existing insurance policy;
 		add_NewHomeInsuranceDetails(); //get details for home insurance pplicy
 		temp1->policyList.push_back(new HomeInsurance(address, marital_status, homeImprovements, petOwner, entrepreneur, monthly_payment, ap, mp, expiryDateLimit, hop, home_people, true/*exists*/, polNum, fn, mn, ln, pn, ssn, a, id));
+		system("pause");
 	}
 }
 // -----------------------------------------------------------------------------"Display" policy methods
-void LinkedList::display_InsuranceDetails(Customer* node){
+void LinkedList::display_InsuranceDetails(Customer* node){ //receives a pointer to a customer node
+	//shows all details for that customer in the received customer node
 	cout<<"ID: "<<node->policyList[0]->get_customer_ID()<<"\n";
 	cout<<"Policy NUmber: "<<node->policyList[0]->get_policyNum()<<"\n";
 	cout<<"Name: "<<node->policyList[0]->get_first_name()<<" "<<node->policyList[0]->get_middle_name()<<" "<<node->policyList[0]->get_last_name()<<"\n";
@@ -543,7 +583,11 @@ void LinkedList::display_CarInsurancePolicy(int c_ID){
 	}
 	cout<<"Monthly payment: $"<<t->get_CarInsurance_monthlyPayment()<<"\n";
 	cout<<"Months paid: "<<t->get_months_passed()<<"\n";
-	cout<<"Payment Remaining: $"<<(t->get_CarInsurance_expiryDateLimit() - t->get_months_passed()) * t->get_CarInsurance_monthlyPayment()<<"\n";
+	float payment_remaining = (t->get_CarInsurance_expiryDateLimit() - t->get_months_passed()) * t->get_CarInsurance_monthlyPayment();
+	cout<<"Payment Remaining: $"<<payment_remaining<<"\n";
+	if(payment_remaining < 0){
+		cout<<"Customer has overpaid. Renew their policy and give refund.\n";
+	}
 	cout<<"\n";
 }
 
@@ -551,12 +595,12 @@ void LinkedList::display_HomeInsurancePolicy(int c_ID){
 	temp1 = head;
 	int i;
 	while(temp1->policyList[0]->customer_ID != c_ID){ //finding which customer Node has the matching customer_ID
-		temp1 = temp1->next;
+		temp1 = temp1->next; //loop to next customer
 	}
 	cout<<"+-------------------------------+\n";
 	cout<<"+ Showing HomeInsurance Details +\n";
 	cout<<"+-------------------------------+\n";
-	display_InsuranceDetails(temp1);
+	display_InsuranceDetails(temp1); //takes a pointer to a customer node for who to display personal information of
 
 	/*When you retrieve an element from the list, it will be typed to Insurance*. If you only need to call non-virtual methods 
 	in your Insurance class, or virtual methods first declared in Insurance, then you're done. 
@@ -567,7 +611,9 @@ void LinkedList::display_HomeInsurancePolicy(int c_ID){
 	}else if(temp1->policyList[1]->exists_HomeInsurance == true){
 		i = 1;
 	}
-	HomeInsurance* t = dynamic_cast<HomeInsurance*>(temp1->policyList[i]);  //cast a Home Insuranc policy to pointer t.
+	HomeInsurance* t = dynamic_cast<HomeInsurance*>(temp1->policyList[i]); //cast a Home Insuranc policy to pointer t.
+
+	//display home insurance details
 	cout<<"Address: "<<t->get_homeowner_address();
 	cout<<"\nMarital Status: "<<t->get_homeowner_maritalstatus();
 	cout<<"\nHome improvements: "<<t->get_homeowner_homeImprovements();
@@ -581,17 +627,64 @@ void LinkedList::display_HomeInsurancePolicy(int c_ID){
 	}
     cout<<"Monthly payment: $"<<t->get_HomeInsurance_monthlyPayment()<<"\n";
 	cout<<"Months paid: "<<t->get_months_passed()<<"\n";
-	cout<<"Payment Remaining: $"<<(t->get_HomeInsurance_expiryDateLimit() - t->get_months_passed()) * t->get_HomeInsurance_monthlyPayment()<<"\n";
+	float payment_remaining = (t->get_HomeInsurance_expiryDateLimit() - t->get_months_passed()) * t->get_HomeInsurance_monthlyPayment();
+	cout<<"Payment Remaining: $"<<payment_remaining<<"\n";
+	if(payment_remaining < 0){
+		cout<<"Customer has overpaid. Renew their policy and give refund.\n";
+	}
 	cout<<"\n";
 }
-// -----------------------------------------------------------------------------
-//to do: the renew policy methods.
+// -----------------------------------------------------------------------------Renew policy method
+void LinkedList::renewPolicy(int c_ID, int insuranceOption, Customer* customer){ //gets the pointer to a customer node that will be checked for its details
+	int i;
+	if(insuranceOption == 1){ //car Insurance
+		if(customer->policyList[0]->exists_carInsurance == true){ //checking in which position the object exists
+			i = 0;
+		}else if(customer->policyList[1]->exists_carInsurance == true){
+			i = 1;
+		}
+		CarInsurance* t = dynamic_cast<CarInsurance*>(customer->policyList[i]);
+		float payment_remaining = (t->get_CarInsurance_expiryDateLimit() - t->get_months_passed()) * t->get_CarInsurance_monthlyPayment();
+		if(payment_remaining < 0){
+			t->reset_CarInsurancePolicy();
+			cout<<"Customer has overpaid. Refund of $"<<-1 * payment_remaining<<" has been given and payments are reset to 0.\n";
+		}
+		cout<<"Enter payment(divisible by "<<t->get_CarInsurance_monthlyPayment()<<"): $";
+		cin>>cop;
+
+		// get the months passed
+		mp = cop/t->get_CarInsurance_monthlyPayment();
+
+		// pass the months passed to the function to a setter method to change if the customer has paid for months in advance
+		t->renew_CarInsurancePolicy(mp);
+	}else if(insuranceOption == 2){ //home Insurance
+		if(customer->policyList[0]->exists_HomeInsurance == true){ //checking in which position the object exists
+			i = 0;
+		}else if(customer->policyList[1]->exists_HomeInsurance == true){
+			i = 1;
+		}
+		HomeInsurance* t = dynamic_cast<HomeInsurance*>(customer->policyList[i]);
+		float payment_remaining = (t->get_HomeInsurance_expiryDateLimit() - t->get_months_passed()) * t->get_HomeInsurance_monthlyPayment();
+		if(payment_remaining < 0){
+			t->reset_HomeInsurancePolicy();
+			cout<<"Customer has overpaid. Refund of $"<<-1 * payment_remaining<<" has been given and payments are reset to 0.\n";
+		}
+		cout<<"Enter payment(divisible by "<<t->get_HomeInsurance_monthlyPayment()<<"): $";
+		cin>>cop;
+
+		// get the months passed
+		mp = cop/t->get_HomeInsurance_monthlyPayment();
+
+		// pass the months passed to the function to a setter method to change if the customer has paid for months in advance
+		t->renew_HomeInsurancePolicy(mp);		
+	}
+}
 
 // -----------------------------------------------------------------------------Methods for testing
 void LinkedList::add_NewCarInsurancePolicy(string carma, string carmo, int d_ln, int carV, int cary, int annualm, float monthlyp, float amountp, int monthsp, int edl ,float carop ,vector<string> safetyf, vector<string> atd, map<int, string> driverc, bool ex, int polnum, string firstn, string middlen, string lastn, string phonen, string social, int cust_age, int cust_id){
 	monthsp = carop/monthlyp; //getting how many months are paid for in advance
-	amountp = 0; //only necessary when renewing policy;
-	if(isEmpty()){//if the list is empty
+	amountp = 0; //only necessary when renewing policy(not used);
+	if(isEmpty()){ //if the list is empty
 		//temp = (Node*)malloc(sizeof(Node)); // can also use "new Node();"
 		temp = new Customer(); //create a memory block for this node
 		temp->policyList.push_back(new CarInsurance(carma, carmo, d_ln, carV, cary, annualm, monthlyp, amountp, monthsp, edl , carop, safetyf, atd, driverc, ex, polnum, firstn, middlen, lastn, phonen, social, cust_age, cust_id));
@@ -613,7 +706,7 @@ void LinkedList::add_NewCarInsurancePolicy(string carma, string carmo, int d_ln,
 }
 void LinkedList::add_NewHomeInsurancePolicy(string add, string maritals, string homei, bool peto, bool entr, float monthlyp, float amountp, int monthsp, int edl, float homeop, vector<string>hp, bool exists, int polnum, string firstn, string middlen, string lastn, string phonen, string social, int cust_age, int cust_id){
 	monthsp = homeop/monthlyp; //getting how many months are paid for in advance
-	ap = 0; //only necessary when renewing policy;
+	ap = 0; //only necessary when renewing policy(not used);
 	if(isEmpty()){//if the list is empty
 		//temp = (Node*)malloc(sizeof(Node)); // can also use "new Node();"
 		temp = new Customer(); //create a memory block for this node
@@ -653,7 +746,7 @@ void LinkedList::executeProgram(){
 					cin>>option_ExistingorNew;
 					if(option_ExistingorNew == 3){break;} //go back and display the main menu
 					switch(option_ExistingorNew){
-						case 1: //Add to a NEW customer policy
+						case 1: //Add to a NEW customer policy(new node on linked list)
 								display_insurancetype_Menu();
 								cin>>option_InsuranceOption;
 								if(option_InsuranceOption == 3){break;} //Go back to main menu
@@ -671,10 +764,10 @@ void LinkedList::executeProgram(){
 									default: cout<<"That was not an option..."<<endl;					
 								}
 								break;					
-						case 2: //Add to an EXISTING customer policy
+						case 2: //Add to an EXISTING customer policy(on an array that belongs to a node(customer)
 								if(isEmpty()){
-									traverseCustomers();
-									break;
+									traverseCustomers(); //will print that there is no customers to show
+									break; //exits the switch and goes back to main menu
 								}
 								cout<<"\nyou chose to add to an existing policy\n";
 								cout<<"+------------------------------+\n";
@@ -683,10 +776,12 @@ void LinkedList::executeProgram(){
 								traverseCustomers();
 								cout<<"+----Customer Index(ex: 1, 2, 3...): ";
 								cin>>option_index;
+								if(option_index <= 0){cout<<"That was not a valid index. \n"<<endl; break;} //Go back to main menu
 								cout<<"\n";
 								display_insurancetype_Menu();
 								cin>>option_InsuranceOption;
-								if(option_InsuranceOption == 3){break;} //Go back to main menu									
+								if(option_InsuranceOption == 3){break;}
+								else if(option_InsuranceOption < 0){cout<<"That was not an option..."<<endl; break;} //Go back to main menu									
 								add_ToExistingPolicy(option_index, option_InsuranceOption);
 								break;
 						default: cout<<"That was not an option..."<<endl;
@@ -694,13 +789,14 @@ void LinkedList::executeProgram(){
 					break;
 			case 2: //View Policy Details
 					if (isEmpty()){
-						traverseCustomers();
-						break;
+						traverseCustomers(); //show that there are no customers
+						break; //exits switch and goes back to main menu
 					}
+					cout<<"\nyou chose to view policy details\n";
 					cout<<"+----------------------+\n";
 					cout<<"+  SELECT CUSTOMER ID  +\n";
 					cout<<"+----------------------+\n";
-					traverseCustomers();
+					traverseCustomers(); //shows all customers
 					cout<<"+----------customer ID: ";
 					cin>>option_customer_ID;
 					cout<<"\n";
@@ -708,25 +804,53 @@ void LinkedList::executeProgram(){
 					//seeing which insurance policy exists and display it
 					temp1 = head;
 					while(temp1->policyList[0]->customer_ID != option_customer_ID){ //finding which customer Node has the matching customer_ID
-						temp1 = temp1->next;
+						temp1 = temp1->next; //loops to next customer node
 					}
 
-					//considered catching a bad_cast exception by using the dynamic cast operator but was too time consuming :(
+					//considered catching a bad_cast exception by using the dynamic cast operator but was too time consuming so I used the boolean values instead:(
+					//checks if an object exists in either the first or second position of the array and displays the details if it exists.
 					if(temp1->policyList[0]->exists_carInsurance == true || temp1->policyList[1]->exists_carInsurance == true){
 						display_CarInsurancePolicy(option_customer_ID);
 					}
 					if(temp1->policyList[0]->exists_HomeInsurance == true || temp1->policyList[1]->exists_HomeInsurance == true){
 						display_HomeInsurancePolicy(option_customer_ID);
 					}
+					system("pause");
 					break;
 			case 3: //Renew a Policy
-
-			case 4: //exit
-				break;
-
+					if(isEmpty()){
+						traverseCustomers();
+						break;
+					}
+					cout<<"\nyou chose to add to renew a policy\n";
+					cout<<"+----------------------+\n";
+					cout<<"+  SELECT CUSTOMER ID  +\n";
+					cout<<"+----------------------+\n";
+					traverseCustomers();
+					cout<<"+----------customer ID: ";
+					cin>>option_customer_ID;
+					cout<<"\n";
+					display_insurancetype_Menu(); //1 for car insurance and 2 for home insurance
+					cin>>option_InsuranceOption;
+					if(option_InsuranceOption == 3){break;} //Go back to main menu	
+					temp1 = head;				
+					while(temp1->policyList[0]->customer_ID != option_customer_ID){ //loops until the customer with a matching id exists.
+						temp1 = temp1->next; //loop to next customer
+					}
+					renewPolicy(option_customer_ID, option_InsuranceOption, temp1);
+					break;
+			case 4: //See Customer List
+					traverseCustomers();
+					system("pause");
+					break;
+			case 5: //Delete all Customers
+					deleteList();
+					system("pause");
+					break;
+			case 6: break;
 			default: cout<<"That was not an option..."<<endl;
 		}
-	}while(option_MainMenu != 4);
+	}while(option_MainMenu != 6);
 }
 // -----------------------------------------------------------------------------Delete List
 void LinkedList::deleteList(){
